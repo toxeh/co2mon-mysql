@@ -1,0 +1,8 @@
+# connection parameters to mysql host
+sshuser=
+sshhost=
+# mysql user and password
+mysqluser=
+mysqlpass=
+# device id (work,home, etc)
+deviceid=

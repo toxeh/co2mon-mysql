@@ -1,0 +1,16 @@
+#!/bin/bash
+# schedule this script
+
+CDIR=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
+# read config
+source $CDIR/.config
+
+cco2=`dbus-send --session --dest=io.github.dmage.CO2Mon --type=method_call --print-reply /io/github/dmage/CO2Mon io.github.dmage.CO2Mon.GetCO2  | awk '/uint16/ {print $2}'`
+ctemp=`dbus-send --session --dest=io.github.dmage.CO2Mon --type=method_call --print-reply /io/github/dmage/CO2Mon io.github.dmage.CO2Mon.GetTemperature | awk '/double/ {print $2}'`
+values="$cco2,$ctemp"
+
+if (( ${#values} > 1 )); then
+    ssh $sshuser@$sshhost deviceid=$deviceid values=$values mysqluser=$mysqluser mysqlpass=$mysqlpass 'bash -s' <<'ENDSSH'
+echo "INSERT INTO co2.co2values (id,dt,co2,temp) VALUES ('$deviceid', NOW(), $values);" | mysql -u$mysqluser -p$mysqlpass --socket=$OPENSHIFT_MYSQL_DB_SOCKET
+ENDSSH
+fi
